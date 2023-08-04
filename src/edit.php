@@ -1,15 +1,8 @@
 <?php
-$hostname = "localhost";
-$bancodedados = "tarefas";
-$usuario = "root";
-$senha = "";
 
+include('../database/conn.php');
 
-// Conectando com o banco de dados
-$mysqli = new mysqli($hostname, $usuario, $senha, $bancodedados);
-
-
-$ID = "";
+$id = "";
 $nome = "";
 $custo = "";
 $data_limite = "";
@@ -20,20 +13,20 @@ $sucessMessage = "";
 if ( $_SERVER['REQUEST_METHOD'] == 'GET'){
     // GET method: Mostra os dados das tarefas
 
-    if ( !isset($_GET["ID"] )){
-        header("location: /lista--tarefas/index.php");
+    if ( !isset($_GET["id"] )){
+        header("location: ../index.php");
         exit;
     }
 
-    $ID = $_GET["ID"];
+    $id = $_GET["id"];
 
     //Faz a leitura da linha da tarefa selecionada no banco de dados 
-    $sql = "SELECT * FROM tarefas WHERE ID=$ID";
+    $sql = "SELECT * FROM tarefas WHERE id=$id";
     $result = $mysqli->query($sql);
     $row = $result->fetch_assoc();
 
     if (!$row) {
-        header("location: /lista--tarefas/index.php");
+        header("location: ../index.php");
         exit;
     }
 
@@ -44,20 +37,20 @@ if ( $_SERVER['REQUEST_METHOD'] == 'GET'){
 else {
      // POST method: Atualiza os dados das tarefas
 
-    $ID = $_POST["ID"];
+    $id = $_POST["id"];
     $nome = $_POST["nome"];
     $custo = $_POST["custo"];
     $data_limite = $_POST["data_limite"];
 
     do {
-        if ( empty($ID) || empty($nome) ||  empty($custo) || empty($data_limite) ) {
+        if ( empty($id) || empty($nome) ||  empty($custo) || empty($data_limite) ) {
             $errorMessage = "Todos os campos são de preenchimento obrigatório ";
             break;
         }
 
         $sql = "UPDATE tarefas " .
                 "SET nome = '$nome', custo = '$custo', data_limite= '$data_limite' " .
-                "WHERE ID = $ID"; 
+                "WHERE id = $id"; 
 
         $result = $mysqli->query($sql);
 
@@ -68,7 +61,7 @@ else {
 
         $sucessMessage = "Tarefa atualizada com sucesso";
 
-        header("location: /lista--tarefas/index.php");
+        header("location: ../index.php");
         exit;
     } while (true);
 }
@@ -103,7 +96,7 @@ else {
 
         
         <form method="post">
-            <input type="hidden" name = "ID" value="<?php echo $ID; ?>">
+            <input type="hidden" name = "id" value="<?php echo $id; ?>">
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">nome</label>
                 <div class="col-sm-6">
@@ -144,7 +137,7 @@ else {
                     <button type="submit" class="btn btn-primary">Enviar</button>
                 </div>
                 <div class="col-sm-3 d-grid">
-                    <a class="btn btn-outline-primary" href="/lista--tarefas/index.php" role="button">Cancelar</a>
+                    <a class="btn btn-outline-primary" href="../index.php" role="button">Cancelar</a>
                 </div>
             </div>
         </form>
