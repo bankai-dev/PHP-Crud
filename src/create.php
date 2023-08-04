@@ -1,50 +1,60 @@
 <?php
-$hostname = "localhost";
-$bancodedados = "tarefas";
-$usuario = "root";
-$senha = "";
-
-// Conectando com o banco de dados
-$mysqli = new mysqli($hostname, $usuario, $senha, $bancodedados);
+session_start();
+include('../database/conn.php');
 
 $nome = "";
 $custo = "";
 $data_limite = "";
 
 $errorMessage = "";
-$sucessMessage = "";
+$successMessage = "";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' ) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nome = $_POST["nome"];
     $custo = $_POST["custo"];
     $data_limite = $_POST["data_limite"];
 
-    do {
-        if ( empty($nome) ||  empty($custo) || empty($data_limite) ) {
-            $errorMessage = "Todos os campos são de preenchimento obrigatório ";
-            break;
-        }
-
+    if (empty($nome) || empty($custo) || empty($data_limite)) {
+        $errorMessage = "Todos os campos são de preenchimento obrigatório";
+    } else {
         // adicionar uma nova tarefa ao banco de dados
-        $sql = "INSERT INTO tarefas (nome, custo, data_limite) " .
-               "VALUES ('$nome', '$custo', '$data_limite')";
+        $sql = "INSERT INTO tarefas (nome, custo, data_limite, ordem_apresentacao) " .
+            "VALUES ('$nome', '$custo', '$data_limite', 0)";
         $result = $mysqli->query($sql);
 
         if (!$result) {
             $errorMessage = "Invalid query: " . $connection->error;
-            break;
+        } else {
+            // Obter o próximo valor para ordem_apresentacao
+            $sql = "SELECT MAX(ordem_apresentacao) AS max_ordem FROM tarefas";
+            $result = $mysqli->query($sql);
+            $row = $result->fetch_assoc();
+            $nextOrder = $row['max_ordem'] + 1;
+
+            // Atualizar a ordem_apresentacao com o próximo valor
+            $sql = "UPDATE tarefas SET ordem_apresentacao = $nextOrder WHERE nome = '$nome'";
+            $result = $mysqli->query($sql);
+
+            // Redirecionar para o index.php após a inserção e atualização
+            //header("Location: ./index.php");
+            //exit;
+
+            //Mensagem de sucesso anterior
+            
+            //$successMessage = "Tarefa adicionada com sucesso";
+            //$_SESSION['successMessage'] = $successMessage;
+
+            //header("Location: ./index.php");
+            //exit;
+
+            echo ("<script type='text/javascript'>
+                    alert('Tarefa adicionada com sucesso');
+                    window.location.href='../index.php';
+                </script>");
+
+            exit;
         }
-
-        $nome = "";
-        $custo = "";
-        $data_limite = "";
-
-        $sucessMessage = "Tarefa adicionada com sucesso";
-
-        header("location: /lista--tarefas/index.php");
-        exit;
-
-    } while (false);
+    }
 }
 ?>
 
@@ -56,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' ) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Tarefas</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div class="container my-5">
@@ -72,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' ) {
             ";
         }
         ?>
-
         
         <form method="post">
             <div class="row mb-3">
@@ -93,32 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' ) {
                     <input type="date" class="form-control" name="data_limite" value="<?php echo $data_limite; ?>">
                 </div>
             </div>
-
-
-
-            <?php
-            if ( !empty($sucessMessage) ) {
-                echo "
-                <div class='row mb-3'>
-                    <div class='offset-sm-3 col-sm-6'>
-                        <div class='alert alert-sucess alert-dismissible fade show' role='alert'>
-                            <strong>$sucessMessage</strong>
-                            <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-                        </div>
-                    </div>
-                </div>
-                ";
-            }
-            ?>
             <div class="row mb-3">
                 <div class="offset-sm-3 col-sm-3 d-grid">
                     <button type="submit" class="btn btn-primary">Enviar</button>
                 </div>
                 <div class="col-sm-3 d-grid">
-                    <a class="btn btn-outline-primary" href="/lista--tarefas/index.php" role="button">Cancelar</a>
+                    <a class="btn btn-outline-primary" href="../index.php" role="button">Cancelar</a>
                 </div>
             </div>
         </form>
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 </html>
